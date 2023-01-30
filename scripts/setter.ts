@@ -10,16 +10,18 @@ dotenv.config()
 const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const mnemonic: string = process.env.DEPLOYER_MNEMONIC || ""
+const calledContractAddress = Address.parse(process.env.CALLED || "");
+const mainContractAddress = Address.parse(process.env.CALLED || "");
+const contract_address_string = process.env.npm_lifecycle_event == "setter:main" ? (process.env.MAIN || "") : (process.env.CALLED || "")
 
 async function sendMessage(
   client: TonClient,
   key: any,
   wallet: WalletContractV3R2,
-  contractAddress: string,
   opCode: number,
   value: number
 ) {
-  const mainContract = Address.parse(contractAddress);
+  const actionContractAddress = Address.parse(contract_address_string);
 
   var messageBody = beginCell().storeUint(opCode, 32).endCell();
 
@@ -28,7 +30,27 @@ async function sendMessage(
       messageBody = beginCell().storeUint(opCode, 32).storeUint(value, 32).endCell();
     }
   } else if (process.env.npm_lifecycle_event == "setter:main") {
-    if (opCode === 100) {
+    if (opCode === 1) {
+      messageBody = beginCell()
+        .storeUint(opCode, 32)
+        .storeUint(value, 32)
+        .storeUint(0x18, 32) // header
+        .storeAddress(calledContractAddress) // dist
+        .storeUint(10_000_000, 32) // amount
+        .storeUint(1, 32) // opcode
+        .storeUint(100, 32) // val
+        .storeUint(3, 32) // mode
+        .endCell();
+    } else if (opCode === 1) {
+      messageBody = beginCell()
+        .storeUint(opCode, 32)
+        .storeUint(value, 32)
+        .storeUint(0x18, 32)
+        .storeAddress(calledContractAddress)
+        .storeUint(10_000_000, 32)
+        .storeUint(3, 32)
+        .endCell();
+    } else if (opCode === 100) {
       messageBody = beginCell().storeUint(opCode, 32).storeUint(value, 32).endCell();
     }
   }
@@ -36,13 +58,13 @@ async function sendMessage(
   const walletContract = client.open(wallet);
   const seqno = await walletContract.getSeqno();
   await sleep(2000)
-  console.log(`wallet addess: ${wallet.address}, no: ${seqno}`);
+  console.log(`no: ${seqno}`);
 
   const transfer = walletContract.createTransfer({
     seqno,
     messages: [
       internal({
-        to: mainContract.toString(),
+        to: actionContractAddress.toString(),
         value: '0.03',
         bounce: false,
         body: messageBody
@@ -68,20 +90,14 @@ async function sendMessage(
 async function main() {
   try {
     var argv = JSON.parse(process.env.npm_config_argv || "")
-    var contract_address = "EQBUPjE1avc6GlI8PLrglo76V9x1hsyV0mw_whKpSlmkRk2y"
     var opCode = 1
     var value = 20
 
     argv = argv?.original
-    if (Object.keys(argv).length > 3) {
-      contract_address = argv[1]
-      opCode = parseInt(argv[2])
-      value = parseInt(argv[3])
+    if (Object.keys(argv).length > 2) {
+      opCode = parseInt(argv[1])
+      value = parseInt(argv[2])
     }
-
-    console.log(`walletContract: ${contract_address}`)
-    console.log(`opCode: ${opCode}`)
-    console.log(`value: ${value}`)
 
     const endpoint = await getHttpEndpoint({ network: process.env.TESTNET ? "testnet" : "mainnet" });
     const client = new TonClient({ endpoint });
@@ -91,7 +107,12 @@ async function main() {
       workchain: 0,
     });
 
-    await sendMessage(client, key, wallet, contract_address, opCode, value);
+    console.log(`contract_address_string: ${contract_address_string}`)
+    console.log(`opCode: ${opCode}`)
+    console.log(`value: ${value}`)
+    console.log(`wallet addess: ${wallet.address}`);
+
+    await sendMessage(client, key, wallet, opCode, value);
   } catch (error) {
     console.log("[sendmsg err]: ", error)
   }

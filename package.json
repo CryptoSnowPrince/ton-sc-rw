@@ -36,7 +36,8 @@
     "web3": "^1.7.1"
   },
   "scripts": {
-    "getter": "ts-node scripts/getter.ts",
+    "getter:called": "ts-node scripts/getter.ts",
+    "getter:main": "ts-node scripts/getter.ts",
     "setter:called": "ts-node scripts/setter.ts",
     "setter:main": "ts-node scripts/setter.ts"
   }
