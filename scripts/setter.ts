@@ -22,8 +22,15 @@ async function sendMessage(
   const mainContract = Address.parse(contractAddress);
 
   var messageBody = beginCell().storeUint(opCode, 32).endCell();
-  if (opCode === 1) {
-    messageBody = beginCell().storeUint(opCode, 32).storeUint(value, 32).endCell();
+
+  if (process.env.npm_lifecycle_event == "setter:called") {
+    if (opCode === 1) {
+      messageBody = beginCell().storeUint(opCode, 32).storeUint(value, 32).endCell();
+    }
+  } else if (process.env.npm_lifecycle_event == "setter:main") {
+    if (opCode === 100) {
+      messageBody = beginCell().storeUint(opCode, 32).storeUint(value, 32).endCell();
+    }
   }
 
   const walletContract = client.open(wallet);
