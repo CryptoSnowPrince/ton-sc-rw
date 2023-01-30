@@ -68,12 +68,13 @@ async function main() {
     argv = argv?.original
     if (Object.keys(argv).length > 3) {
       contract_address = argv[1]
-      opCode = argv[2]
-      value = argv[3]
-      console.log(`walletContract: ${contract_address}`)
-      console.log(`opCode: ${opCode}`)
-      console.log(`value: ${value}`)
+      opCode = parseInt(argv[2])
+      value = parseInt(argv[3])
     }
+
+    console.log(`walletContract: ${contract_address}`)
+    console.log(`opCode: ${opCode}`)
+    console.log(`value: ${value}`)
 
     const endpoint = await getHttpEndpoint({ network: process.env.TESTNET ? "testnet" : "mainnet" });
     const client = new TonClient({ endpoint });
