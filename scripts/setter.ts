@@ -38,17 +38,17 @@ async function sendMessage(
         .storeAddress(calledContractAddress) // dist
         .storeUint(10_000_000, 32) // amount
         .storeUint(1, 32) // opcode
-        .storeUint(100, 32) // val
+        .storeUint(125, 32) // val
         .storeUint(3, 32) // mode
         .endCell();
     } else if (opCode === 2) {
       messageBody = beginCell()
         .storeUint(opCode, 32)
         .storeUint(value, 32)
-        .storeUint(0x18, 32)
-        .storeAddress(calledContractAddress)
-        .storeUint(10_000_000, 32)
-        .storeUint(3, 32)
+        .storeUint(0x18, 32) // header
+        .storeAddress(calledContractAddress) // dist
+        .storeUint(10_000_000, 32) // amount
+        .storeUint(3, 32) // mode
         .endCell();
     } else if (opCode === 100) {
       messageBody = beginCell().storeUint(opCode, 32).storeUint(value, 32).endCell();
