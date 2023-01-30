@@ -41,7 +41,7 @@ async function sendMessage(
         .storeUint(100, 32) // val
         .storeUint(3, 32) // mode
         .endCell();
-    } else if (opCode === 1) {
+    } else if (opCode === 2) {
       messageBody = beginCell()
         .storeUint(opCode, 32)
         .storeUint(value, 32)
